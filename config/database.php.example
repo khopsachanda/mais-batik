@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+$requiredEnvironmentVariable = static function (string $name): string {
+    $value = getenv($name);
+
+    if ($value === false) {
+        throw new RuntimeException(sprintf('Environment variable %s must be set.', $name));
+    }
+
+    return $value;
+};
+
+return [
+    'driver' => 'mysql',
+    'host' => $requiredEnvironmentVariable('DB_HOST'),
+    'port' => (int) (getenv('DB_PORT') ?: '3306'),
+    'database' => $requiredEnvironmentVariable('DB_NAME'),
+    'username' => $requiredEnvironmentVariable('DB_USERNAME'),
+    'password' => $requiredEnvironmentVariable('DB_PASSWORD'),
+    'charset' => 'utf8mb4',
+];
