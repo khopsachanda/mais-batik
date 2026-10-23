@@ -1,130 +1,172 @@
 # Mais Batik
 
-## Deskripsi Singkat
+Mais Batik adalah **Sistem Informasi Bisnis Batik Terpadu** untuk membantu
+pelanggan menemukan produk batik dan membantu admin mengelola katalog serta
+pesanan dalam satu aplikasi web. Proyek ini menggabungkan pengalaman katalog
+publik yang responsif dengan panel pengelolaan berbasis PHP dan MySQL.
 
-Mais Batik adalah **[isi deskripsi singkat dan tujuan proyek di sini]**.
+## Fitur Utama dan Nilai Tambah
 
-## Status Fitur
+- **Katalog produk responsif** dengan informasi produk, kisaran harga, varian,
+  stok, detail, dan aksi pemesanan.
+- **Filter kategori dan pencarian interaktif** yang menyaring produk langsung
+  tanpa memuat ulang halaman.
+- **Mode terang dan gelap** yang mengikuti preferensi sistem dan menyimpan
+  pilihan tema di browser.
+- **Panel admin** untuk autentikasi serta pengelolaan data produk dan pesanan.
+- **Formulir dengan validasi client-side dan server-side** untuk membantu
+  memastikan data yang dikirim lengkap dan sesuai format.
+- **Dialog konfirmasi** sebelum aksi penghapusan data.
+- **Arsitektur modular** yang memisahkan kode publik, konfigurasi, model,
+  penyimpanan data, dan aset antarmuka.
+- **Keamanan dasar aplikasi**, termasuk penggunaan PDO, konfigurasi rahasia
+  melalui environment, perlindungan CSRF, dan escaping keluaran.
 
-| Fitur | Status |
-| --- | --- |
-| Halaman awal | Tersedia; bagian cerita dan inspirasi motif |
-| Filter kategori, pencarian, dan detail produk | Tersedia |
-| Navigasi responsif | Tersedia |
-| Login Admin dan CRUD produk/pesanan | Tersedia; konfigurasi database dan akun admin wajib disiapkan |
-| Katalog publik berbasis database | Tersedia setelah database disiapkan |
-| POS | Placeholder; belum terhubung ke sistem |
+> POS masih berupa placeholder dan belum terhubung ke proses transaksi.
 
-Perbarui status fitur seiring perkembangan proyek.
+## Teknologi dan Prasyarat
 
-## Struktur Proyek
+- PHP 8.1 atau lebih baru, dengan ekstensi **PDO MySQL** dan **mbstring**.
+- MySQL atau MariaDB.
+- Git dan MySQL client untuk instalasi lokal.
+- Web server PHP untuk menjalankan aplikasi; Node.js/npm dan Composer tidak
+  diperlukan untuk versi saat ini.
+
+## Instalasi dan Menjalankan Secara Lokal
+
+### 1. Clone repositori
+
+Ganti `<URL_REPOSITORI>` dengan alamat repositori Git proyek:
+
+```bash
+git clone <URL_REPOSITORI>
+cd <FOLDER_REPOSITORI>
+```
+
+### 2. Siapkan konfigurasi database
+
+Salin file contoh konfigurasi menjadi file lokal. File `config/database.php`
+tidak dilacak Git agar kredensial lokal tidak masuk ke repositori.
+
+```powershell
+Copy-Item config\database.php.example config\database.php
+```
+
+Atur environment database pada terminal PowerShell yang sama dengan terminal
+yang akan digunakan untuk menjalankan server:
+
+```powershell
+$env:DB_HOST = "127.0.0.1"
+$env:DB_PORT = "3306"
+$env:DB_NAME = "mais_batik"
+$env:DB_USERNAME = "nama_user_database"
+$env:DB_PASSWORD = "kata_sandi_database"
+```
+
+`DB_PORT` menggunakan `3306` jika tidak ditentukan. Jangan memasukkan
+kredensial asli ke source code atau repositori.
+
+### 3. Buat tabel dan impor skema
+
+Skema membuat database `mais_batik` serta tabel produk dan pesanan. Jalankan
+perintah dari root proyek:
+
+```powershell
+Get-Content -Raw database\schema.sql | mysql -u nama_user_database -p
+```
+
+Masukkan kata sandi MySQL saat diminta. Jika akun database tidak diizinkan
+membuat database, buat `mais_batik` terlebih dahulu di MySQL, lalu hapus
+perintah `CREATE DATABASE` dan `USE` dari salinan skema yang akan diimpor.
+
+### 4. Siapkan akun admin
+
+Buat hash untuk kata sandi admin menggunakan PHP:
+
+```powershell
+php -r "echo password_hash('GantiDenganPasswordKuat', PASSWORD_DEFAULT), PHP_EOL;"
+```
+
+Simpan nama pengguna dan hash sebagai environment untuk sesi terminal tersebut:
+
+```powershell
+$env:ADMIN_USERNAME = "admin"
+$env:ADMIN_PASSWORD_HASH = "<HASH_HASIL_PERINTAH>"
+```
+
+Jangan menggunakan contoh kata sandi di atas untuk akun nyata dan jangan
+menyimpan kata sandi atau hash admin di repositori.
+
+### 5. Jalankan server lokal
+
+Dengan environment database dan admin telah diatur pada terminal yang sama:
+
+```powershell
+php -S 127.0.0.1:8000 -t public
+```
+
+Buka [http://127.0.0.1:8000](http://127.0.0.1:8000) untuk halaman awal,
+[http://127.0.0.1:8000/katalog.php](http://127.0.0.1:8000/katalog.php) untuk
+katalog database, dan [http://127.0.0.1:8000/admin/](http://127.0.0.1:8000/admin/)
+untuk panel admin. Server bawaan PHP hanya untuk development lokal, bukan
+production. Jika koneksi gagal, periksa service MySQL, nilai environment,
+konfigurasi `config/database.php`, dan apakah skema sudah diimpor.
+
+Untuk panduan deployment PHP/MySQL, lihat [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+## Struktur Repositori dan Alur Kode
 
 ```text
-Mais Batik/
-├── config/                 # Konfigurasi aplikasi dan database
+.
+├── config/                  # Koneksi dan konfigurasi aplikasi
 │   ├── connection.php
 │   └── database.php.example
 ├── database/
-│   └── schema.sql          # Skema tabel produk dan pesanan
-├── controllers/            # Ruang untuk controller aplikasi berikutnya
-├── models/                 # Repository produk dan pesanan
-│   ├── ProductRepository.php
-│   └── OrderRepository.php
-├── views/                  # Template antarmuka
-├── routes/                 # Definisi rute aplikasi
-├── public/                 # Document root dan aset publik
+│   └── schema.sql           # Skema MySQL produk dan pesanan
+├── controllers/             # Ruang untuk controller terpisah
+├── models/                  # Akses data/repository produk dan pesanan
+├── public/                  # Document root; halaman dan aset yang dapat diakses
+│   ├── admin/index.php      # Login admin dan panel CRUD
 │   ├── assets/
-│   │   ├── css/
-│   │   │   ├── style.css
-│   │   │   └── admin.css
-│   │   ├── js/
-│   │   │   ├── main.js
-│   │   │   └── admin.js
-│   │   └── images/
-│   │       ├── baju-koko.svg
-│   │       ├── sarung-instan-anak.svg
-│   │       └── blouse-batik.svg
-│   ├── admin/
-│   │   └── index.php       # Login dan panel CRUD admin
-│   ├── katalog.php         # Katalog publik dari database
-│   └── index.html          # Halaman awal publik
-├── storage/
-│   └── uploads/             # File unggahan; jangan simpan file publik di sini
-└── tests/                   # Pengujian aplikasi
+│   │   ├── css/             # Gaya storefront dan panel admin
+│   │   ├── images/          # Ilustrasi produk
+│   │   └── js/              # Interaksi katalog, admin, dan tema
+│   ├── katalog.php          # Katalog publik dari database
+│   └── index.html           # Halaman awal publik
+├── routes/                  # Ruang untuk definisi rute
+├── storage/                 # Area penyimpanan internal/unggahan
+├── tests/                   # Pengujian
+├── views/                   # Ruang untuk template antarmuka
+├── DEPLOYMENT.md            # Panduan hosting PHP/MySQL
+└── README.md
 ```
 
-`public/` adalah document root yang disarankan untuk web server. Simpan kode aplikasi dan konfigurasi di luar document root.
+Permintaan halaman masuk melalui berkas PHP di `public/`. Koneksi di
+`config/connection.php` menggunakan nilai dari konfigurasi database,
+repository di `models/` menangani akses data, dan `database/schema.sql`
+menyediakan struktur penyimpanan. HTML, CSS, JavaScript, serta gambar yang
+disajikan ke browser berada di `public/`. Folder `controllers/`, `routes/`,
+dan `views/` disediakan untuk pengembangan pemisahan MVC lebih lanjut.
 
-## Panduan Instalasi Lokal
+Atur document root web server ke `public/`. Simpan konfigurasi, model, dan
+berkas internal lain di luar document root. Database harus disiapkan sebelum
+katalog dinamis dan fitur CRUD dapat digunakan.
 
-### Prasyarat
+## Live Deployment
 
-- PHP 8.1 atau lebih baru dengan ekstensi PDO MySQL dan mbstring.
-- Composer, jika proyek memiliki `composer.json`.
-- Node.js dan npm, jika proyek memiliki `package.json`.
-- Git.
+**Status:** aplikasi belum memiliki URL deployment aktif.
 
-### Langkah instalasi
-
-1. Clone repositori, lalu masuk ke folder proyek:
-
-   ```bash
-   git clone <URL_REPOSITORI>
-   cd <NAMA_FOLDER_PROYEK>
-   ```
-
-2. Salin templat konfigurasi database:
-
-   ```bash
-   cp config/database.php.example config/database.php
-   ```
-
-   Di Windows PowerShell, gunakan `Copy-Item config/database.php.example config/database.php`.
-   Atur variabel environment `DB_HOST`, `DB_NAME`, `DB_USERNAME`, dan `DB_PASSWORD`
-   pada lingkungan tempat aplikasi dijalankan. `DB_PORT` bersifat opsional dan
-   menggunakan `3306` secara default. Jangan masukkan kredensial asli ke repositori.
-
-3. Buat database dan tabel:
-
-   ```bash
-   mysql -u nama_user -p < database/schema.sql
-   ```
-
-   Di Windows PowerShell, gunakan:
-
-   ```powershell
-   Get-Content database\schema.sql | mysql -u nama_user -p
-   ```
-
-   `DB_NAME` harus bernilai `mais_batik`, sesuai nama database pada skema.
-
-4. Konfigurasikan akun admin di environment server. Gunakan nama pengguna
-   `ADMIN_USERNAME` dan hash password `ADMIN_PASSWORD_HASH`; jangan simpan
-   kata sandi teks biasa di repositori. Buat hash dengan PHP:
-
-   ```bash
-   php -r "echo password_hash('GantiDenganPasswordKuat', PASSWORD_DEFAULT), PHP_EOL;"
-   ```
-
-   Simpan hasil hash tersebut di environment server sebagai `ADMIN_PASSWORD_HASH`.
-   Pastikan gunakan HTTPS saat panel admin diakses melalui jaringan.
-
-5. Instal dependensi sesuai teknologi yang digunakan:
-
-   ```bash
-   composer install   # Jika tersedia composer.json
-   npm install        # Jika tersedia package.json
-   ```
-
-6. Atur web server agar document root mengarah ke folder `public/`, lalu jalankan
-   aplikasi menggunakan perintah yang sesuai dengan framework atau konfigurasi proyek.
-   Panel tersedia di `/admin/`, sedangkan katalog berbasis database ada di `/katalog.php`.
-   Fungsi CRUD dan katalog dinamis membutuhkan PHP dan database MySQL yang aktif.
-
-## Link Live Deployment
-
-> Belum tersedia — tambahkan URL deployment di sini.
+Belum ada URL live untuk ditautkan. Untuk menyiapkan hosting PHP/MySQL dan
+mengaktifkan deployment, ikuti [panduan deployment](./DEPLOYMENT.md). Setelah
+deployment selesai, ganti status ini dengan URL aplikasi, misalnya:
+`https://mais-batik.example.com`.
 
 ## Screenshot
 
-> Belum tersedia — tambahkan screenshot aplikasi di sini.
+Berikut tampilan halaman awal Mais Batik yang dijalankan secara lokal:
+
+![Screenshot halaman awal Mais Batik](docs/screenshots/mais-batik-home.png)
+
+Screenshot ini menampilkan ilustrasi katalog statis. Katalog berbasis database
+dan panel admin memerlukan konfigurasi MySQL; keduanya belum ditampilkan pada
+screenshot ini.

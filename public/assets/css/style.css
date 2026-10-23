@@ -79,8 +79,8 @@ button:focus-visible {
   position: sticky;
   z-index: 10;
   top: 0;
-  border-bottom: 1px solid rgb(32 53 47 / 8%);
-  background: rgb(248 245 237 / 94%);
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
   backdrop-filter: blur(14px);
 }
 
@@ -137,6 +137,33 @@ button:focus-visible {
   display: flex;
   align-items: center;
   gap: clamp(1.1rem, 2.5vw, 2rem);
+}
+
+.header-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-shrink: 0;
+}
+
+.theme-toggle {
+  display: inline-grid;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+}
+
+.theme-toggle:hover {
+  transform: rotate(-10deg);
+  border-color: var(--gold);
 }
 
 .nav-link,
@@ -1272,6 +1299,10 @@ p {
     cursor: pointer;
   }
 
+  .header-inner {
+    gap: 1rem;
+  }
+
   .menu-toggle span {
     width: 18px;
     height: 1.5px;
@@ -1303,6 +1334,10 @@ p {
     border-bottom: 1px solid var(--line);
     background: var(--paper);
     box-shadow: 0 12px 20px rgb(32 53 47 / 8%);
+  }
+
+  .header-tools {
+    margin-left: auto;
   }
 
   .primary-navigation.is-open {
@@ -1559,4 +1594,58 @@ p {
     scroll-behavior: auto !important;
     transition-duration: 0.01ms !important;
   }
+
+  .theme-toggle {
+    transition: none;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #eee9dd;
+  --ink-soft: #b8c0b7;
+  --paper: #17231f;
+  --paper-deep: #202f29;
+  --white: #22312b;
+  --green: #8eb7a0;
+  --green-dark: #172b23;
+  --terracotta: #e08d68;
+  --gold: #d7b776;
+  --line: #3a4a42;
+}
+
+:root[data-theme="dark"] .site-header {
+  background: rgb(23 35 31 / 94%);
+}
+
+:root[data-theme="dark"] .primary-navigation {
+  background: var(--paper);
+}
+
+:root[data-theme="dark"] .nav-login {
+  color: var(--ink);
+}
+
+:root[data-theme="dark"] .button-primary,
+:root[data-theme="dark"] .product-order:not(.is-disabled) {
+  color: #f9f5ed;
+}
+
+:root[data-theme="dark"] .card-index {
+  color: #20352f;
+}
+
+:root[data-theme="dark"] .catalog-error {
+  border-color: #75473e;
+  background: #382723;
+  color: #f3c4b5;
+}
+
+:root[data-theme="dark"] .catalog-error .eyebrow {
+  color: #f1a384;
+}
+
+:root[data-theme="dark"] .product-dialog .is-disabled {
+  background: #38423d;
+  color: #bac2bc;
 }

@@ -386,18 +386,24 @@ $statusLabels = [
     <meta name="robots" content="noindex, nofollow">
     <title>Panel Admin — Mais Batik</title>
     <link rel="stylesheet" href="../assets/css/admin.css">
+    <script src="../assets/js/theme.js" defer></script>
     <script src="../assets/js/admin.js" defer></script>
   </head>
   <body>
     <header class="admin-header">
       <a class="admin-brand" href="../">Mais<span>Batik</span><small>ADMIN</small></a>
-      <?php if ($isAuthenticated): ?>
-        <form method="post" class="logout-form">
-          <input type="hidden" name="csrf_token" value="<?= adminEscape($csrfToken) ?>">
-          <input type="hidden" name="action" value="logout">
-          <button class="button button-quiet" type="submit">Keluar</button>
-        </form>
-      <?php endif; ?>
+      <div class="admin-header-tools">
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Aktifkan mode gelap" aria-pressed="false" title="Aktifkan mode gelap">
+          <span class="theme-icon" aria-hidden="true">☾</span>
+        </button>
+        <?php if ($isAuthenticated): ?>
+          <form method="post" class="logout-form">
+            <input type="hidden" name="csrf_token" value="<?= adminEscape($csrfToken) ?>">
+            <input type="hidden" name="action" value="logout">
+            <button class="button button-quiet" type="submit">Keluar</button>
+          </form>
+        <?php endif; ?>
+      </div>
     </header>
 
     <main class="admin-shell">

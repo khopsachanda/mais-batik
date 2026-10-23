@@ -47,6 +47,7 @@ foreach ($products as $product) {
     <meta name="theme-color" content="#f8f5ed">
     <title>Katalog Produk — Mais Batik</title>
     <link rel="stylesheet" href="assets/css/style.css">
+    <script src="assets/js/theme.js" defer></script>
     <script src="assets/js/main.js" defer></script>
   </head>
   <body>
@@ -57,9 +58,6 @@ foreach ($products as $product) {
           <span class="brand-mark" aria-hidden="true">M</span>
           <span class="brand-name">mais<span>batik</span></span>
         </a>
-        <button class="menu-toggle" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="primary-navigation">
-          <span></span><span></span><span></span>
-        </button>
         <nav class="primary-navigation" id="primary-navigation" aria-label="Navigasi utama">
           <a class="nav-link" href="index.html#home">Home</a>
           <a class="nav-link" href="katalog.php" aria-current="page">Katalog</a>
@@ -68,6 +66,14 @@ foreach ($products as $product) {
           <a class="nav-link nav-system" href="index.html#pos">POS</a>
           <a class="nav-login" href="admin/">Login Admin <span aria-hidden="true">↗</span></a>
         </nav>
+        <div class="header-tools">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Aktifkan mode gelap" aria-pressed="false" title="Aktifkan mode gelap">
+            <span class="theme-icon" aria-hidden="true">☾</span>
+          </button>
+          <button class="menu-toggle" type="button" aria-label="Buka navigasi" aria-expanded="false" aria-controls="primary-navigation">
+            <span></span><span></span><span></span>
+          </button>
+        </div>
       </div>
     </header>
 

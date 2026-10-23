@@ -55,6 +55,29 @@ select {
   background: var(--admin-white);
 }
 
+.admin-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.theme-toggle {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid var(--admin-line);
+  border-radius: 50%;
+  background: var(--admin-white);
+  color: var(--admin-ink);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: #b65e3d;
+}
+
 .admin-brand {
   font-family: Georgia, "Times New Roman", serif;
   font-size: 1.55rem;
@@ -576,4 +599,79 @@ select {
     right: auto;
     left: 0;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --admin-ink: #eee9dd;
+  --admin-muted: #b8c0b7;
+  --admin-paper: #17231f;
+  --admin-white: #22312b;
+  --admin-green: #8eb7a0;
+  --admin-green-dark: #405f50;
+  --admin-red: #e08d80;
+  --admin-line: #3a4a42;
+}
+
+:root[data-theme="dark"] .button-primary {
+  color: #17231f;
+}
+
+:root[data-theme="dark"] .button-quiet,
+:root[data-theme="dark"] .form-grid input,
+:root[data-theme="dark"] .form-grid select,
+:root[data-theme="dark"] .form-grid textarea,
+:root[data-theme="dark"] .inline-editor > summary {
+  background: #1a2923;
+  color: var(--admin-ink);
+}
+
+:root[data-theme="dark"] .button-danger {
+  border-color: #75473e;
+  background: #382723;
+  color: #f3b5a7;
+}
+
+:root[data-theme="dark"] .notice-success {
+  border-color: #3c6848;
+  background: #203a29;
+  color: #b5d9bc;
+}
+
+:root[data-theme="dark"] .notice-error {
+  border-color: #75473e;
+  background: #382723;
+  color: #f3c4b5;
+}
+
+:root[data-theme="dark"] .admin-tabs a span,
+:root[data-theme="dark"] .order-mark,
+:root[data-theme="dark"] .coming-soon {
+  background: #34433b;
+  color: var(--admin-ink);
+}
+
+:root[data-theme="dark"] .status-pill {
+  background: #34433b;
+  color: var(--admin-ink);
+}
+
+:root[data-theme="dark"] .status-baru {
+  background: #293b50;
+  color: #bfd5f0;
+}
+
+:root[data-theme="dark"] .status-diproses {
+  background: #4b4128;
+  color: #efda9f;
+}
+
+:root[data-theme="dark"] .status-selesai {
+  background: #2a4630;
+  color: #bde0c0;
+}
+
+:root[data-theme="dark"] .status-dibatalkan {
+  background: #4a302b;
+  color: #f2c0b5;
 }
