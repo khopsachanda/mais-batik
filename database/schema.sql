@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS products (
     price_min BIGINT UNSIGNED NOT NULL,
     price_max BIGINT UNSIGNED NOT NULL,
     stock INT UNSIGNED NOT NULL DEFAULT 0,
-    image_path VARCHAR(255) NOT NULL DEFAULT 'assets/images/baju-koko.svg',
+    image_path VARCHAR(255) NOT NULL DEFAULT 'assets/images/products/baju-koko.jpg',
     status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

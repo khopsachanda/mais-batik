@@ -114,6 +114,17 @@ function adminRecordId(string $field = 'id'): int
     return $id;
 }
 
+function adminProductImages(): array
+{
+    return [
+        'assets/images/products/baju-koko.jpg' => 'Baju Koko Bordir Putih',
+        'assets/images/products/sarun-instan-anak.jpg' => 'Sarung Instan Anak Hitam',
+        'assets/images/products/blouse-motif-parang.jpg' => 'Blouse Batik Motif Parang Hitam',
+        'assets/images/products/sarung-batik-dewasa.jpg' => 'Sarung Batik Dewasa Krem',
+        'assets/images/products/blose-motif-bunga-alena.jpg' => 'Blouse Batik Bunga Alena Maroon',
+    ];
+}
+
 function adminProductInput(): array
 {
     $categories = ['pria', 'anak', 'wanita'];
@@ -140,7 +151,7 @@ function adminProductInput(): array
     }
 
     if (
-        preg_match('/^assets\/images\/[A-Za-z0-9._-]+\.(?:svg|png|jpe?g|webp)$/iD', $imagePath) !== 1
+        !array_key_exists($imagePath, adminProductImages())
         || !is_file(dirname(__DIR__) . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $imagePath))
     ) {
         throw new InvalidArgumentException('Pilih berkas gambar yang tersedia di folder aset produk.');
@@ -476,9 +487,9 @@ $statusLabels = [
                   </label>
                   <label>Gambar produk
                     <select name="image_path" required>
-                      <option value="assets/images/baju-koko.svg">Ilustrasi baju koko</option>
-                      <option value="assets/images/sarung-instan-anak.svg">Ilustrasi sarung anak</option>
-                      <option value="assets/images/blouse-batik.svg">Ilustrasi blouse</option>
+                    <?php foreach (adminProductImages() as $path => $label): ?>
+                      <option value="<?= adminEscape($path) ?>"><?= adminEscape($label) ?></option>
+                    <?php endforeach; ?>
                     </select>
                   </label>
                   <label>Harga minimum (Rp)
@@ -522,7 +533,7 @@ $statusLabels = [
                           <label>Nama produk<input name="name" required maxlength="120" minlength="2" value="<?= adminEscape($product['name']) ?>"></label>
                           <label>Kategori<select name="category" required><?php foreach ($categoryLabels as $value => $label): ?><option value="<?= adminEscape($value) ?>" <?= $product['category'] === $value ? 'selected' : '' ?>><?= adminEscape($label) ?></option><?php endforeach; ?></select></label>
                           <label>Varian / ukuran<input name="variant" required maxlength="160" value="<?= adminEscape($product['variant']) ?>"></label>
-                          <label>Gambar produk<select name="image_path" required><?php foreach (['assets/images/baju-koko.svg' => 'Ilustrasi baju koko', 'assets/images/sarung-instan-anak.svg' => 'Ilustrasi sarung anak', 'assets/images/blouse-batik.svg' => 'Ilustrasi blouse'] as $path => $label): ?><option value="<?= adminEscape($path) ?>" <?= $product['image_path'] === $path ? 'selected' : '' ?>><?= adminEscape($label) ?></option><?php endforeach; ?></select></label>
+                          <label>Gambar produk<select name="image_path" required><?php foreach (adminProductImages() as $path => $label): ?><option value="<?= adminEscape($path) ?>" <?= $product['image_path'] === $path ? 'selected' : '' ?>><?= adminEscape($label) ?></option><?php endforeach; ?></select></label>
                           <label>Harga minimum (Rp)<input name="price_min" type="number" min="1" max="999999999999" step="1" required value="<?= adminEscape($product['price_min']) ?>"></label>
                           <label>Harga maksimum (Rp)<input name="price_max" type="number" min="1" max="999999999999" step="1" required value="<?= adminEscape($product['price_max']) ?>"></label>
                           <label>Stok<input name="stock" type="number" min="0" max="1000000" step="1" required value="<?= adminEscape($product['stock']) ?>"></label>

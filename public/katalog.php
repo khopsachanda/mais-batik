@@ -123,7 +123,7 @@ foreach ($products as $product) {
             <?php foreach ($products as $product): ?>
               <?php
               $imagePath = (string) $product['image_path'];
-              $safeImagePath = preg_match('/^assets\/images\/[A-Za-z0-9._-]+\.(?:svg|png|jpe?g|webp)$/iD', $imagePath) === 1
+              $safeImagePath = preg_match('/^assets\/images\/products\/[A-Za-z0-9._-]+\.jpg$/iD', $imagePath) === 1
                   && is_file(__DIR__ . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $imagePath));
               $searchText = mb_strtolower(
                   implode(' ', [$product['name'], $product['category'], $product['variant']]),
