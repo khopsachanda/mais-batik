@@ -64,7 +64,8 @@ $env:DB_PASSWORD = "kata_sandi_database"
 ```
 
 `DB_PORT` menggunakan `3306` jika tidak ditentukan. Jangan memasukkan
-kredensial asli ke source code atau repositori.
+kredensial asli ke source code atau repositori. Jika akun database lokal memang
+tidak memakai kata sandi, `DB_PASSWORD` boleh dikosongkan atau tidak diatur.
 
 ### 3. Buat tabel dan impor skema
 

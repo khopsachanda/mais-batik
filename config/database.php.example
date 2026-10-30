@@ -12,12 +12,14 @@ $requiredEnvironmentVariable = static function (string $name): string {
     return $value;
 };
 
+$databasePassword = getenv('DB_PASSWORD');
+
 return [
     'driver' => 'mysql',
     'host' => $requiredEnvironmentVariable('DB_HOST'),
     'port' => (int) (getenv('DB_PORT') ?: '3306'),
     'database' => $requiredEnvironmentVariable('DB_NAME'),
     'username' => $requiredEnvironmentVariable('DB_USERNAME'),
-    'password' => $requiredEnvironmentVariable('DB_PASSWORD'),
+    'password' => $databasePassword === false ? '' : $databasePassword,
     'charset' => 'utf8mb4',
 ];

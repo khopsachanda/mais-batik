@@ -28,7 +28,8 @@ atau menonaktifkan akses eksternal/database setelah periode tertentu.
 3. Buat `config/database.php` di server dari `config/database.php.example`.
    Pastikan konfigurasi mengembalikan nilai dari environment `DB_HOST`, `DB_PORT`,
    `DB_NAME`, `DB_USERNAME`, dan `DB_PASSWORD`. Isi environment variables pada
-   panel hosting; aplikasi ini tidak membaca `.env` secara otomatis.
+   panel hosting; aplikasi ini tidak membaca `.env` secara otomatis. Untuk
+   production, gunakan kata sandi database yang kuat dan atur `DB_PASSWORD`.
 4. Impor `database/schema.sql` lewat phpMyAdmin atau alat database provider.
    Skema membuat database `mais_batik`; jika provider tidak memberi hak untuk
    membuat database, hapus perintah `CREATE DATABASE` dan `USE` dari salinan SQL
