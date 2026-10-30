@@ -230,6 +230,7 @@ select {
 
 .admin-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
   margin-bottom: 1.8rem;
   border-bottom: 1px solid var(--admin-line);
@@ -353,6 +354,81 @@ select {
 .record-list {
   display: grid;
   gap: 0.75rem;
+}
+
+.pos-form {
+  padding: 1.2rem;
+}
+
+.record-card.category-record {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.pos-items {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.pos-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(100px, 0.7fr) minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid var(--admin-line);
+}
+
+.pos-item-row label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.45rem;
+  color: #45574f;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.pos-item-row input,
+.pos-item-row select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid #d9d8d0;
+  background: white;
+  color: var(--admin-ink);
+  font-size: 0.8rem;
+}
+
+.pos-line-total {
+  padding-bottom: 0.75rem;
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+}
+
+.pos-item-row button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.pos-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.pos-total {
+  margin: 1rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.form-help {
+  margin: 0.5rem 0 0;
+  color: var(--admin-muted);
+  font-size: 0.72rem;
+  line-height: 1.5;
 }
 
 .record-card {
@@ -560,9 +636,26 @@ select {
     justify-content: flex-start;
   }
 
+  .record-card.category-record .record-controls {
+    grid-column: auto;
+  }
+
   .order-mark {
     width: 48px;
     height: 48px;
+  }
+
+  .pos-item-row {
+    grid-template-columns: minmax(0, 1fr) minmax(90px, 0.5fr);
+  }
+
+  .pos-line-total {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
+
+  .pos-item-row button {
+    justify-self: start;
   }
 }
 
@@ -621,6 +714,8 @@ select {
 :root[data-theme="dark"] .form-grid input,
 :root[data-theme="dark"] .form-grid select,
 :root[data-theme="dark"] .form-grid textarea,
+:root[data-theme="dark"] .pos-item-row input,
+:root[data-theme="dark"] .pos-item-row select,
 :root[data-theme="dark"] .inline-editor > summary {
   background: #1a2923;
   color: var(--admin-ink);

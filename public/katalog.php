@@ -33,10 +33,9 @@ try {
     $catalogError = 'Katalog belum dapat dimuat. Pastikan database dan konfigurasi aplikasi sudah disiapkan.';
 }
 
-$categoryLabels = ['pria' => 'Batik pria', 'anak' => 'Batik anak', 'wanita' => 'Batik wanita'];
 $categories = [];
 foreach ($products as $product) {
-    $categories[$product['category']] = $categoryLabels[$product['category']] ?? $product['category'];
+    $categories[$product['category']] = $product['category_name'];
 }
 ?>
 <!doctype html>
@@ -135,7 +134,7 @@ foreach ($products as $product) {
                   . ' – Rp' . number_format((int) $product['price_max'], 0, ',', '.');
               $detail = sprintf(
                   '%s. Varian: %s. %s.',
-                  $categoryLabels[$product['category']] ?? $product['category'],
+                  $product['category_name'],
                   $product['variant'],
                   $inStock ? 'Stok tersedia' : 'Stok sedang habis'
               );
@@ -149,7 +148,7 @@ foreach ($products as $product) {
                   <?php else: ?>
                     <div class="missing-product-image" role="img" aria-label="Foto produk belum tersedia">Mais Batik</div>
                   <?php endif; ?>
-                  <span class="product-category"><?= catalogEscape($categoryLabels[$product['category']] ?? $product['category']) ?></span>
+                  <span class="product-category"><?= catalogEscape($product['category_name']) ?></span>
                   <span class="stock-badge <?= $inStock ? '' : 'stock-sold-out' ?>">
                     <span aria-hidden="true"></span><?= $inStock ? 'Stok tersedia · ' . catalogEscape($product['stock']) : 'Stok habis' ?>
                   </span>

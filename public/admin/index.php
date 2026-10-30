@@ -3,11 +3,19 @@
 declare(strict_types=1);
 
 use MaisBatik\Models\OrderRepository;
+use MaisBatik\Models\CategoryRepository;
+use MaisBatik\Models\PosRepository;
 use MaisBatik\Models\ProductRepository;
+use MaisBatik\Controllers\CategoryController;
+use MaisBatik\Controllers\PosController;
 
 $projectRoot = dirname(__DIR__, 2);
 require $projectRoot . '/models/ProductRepository.php';
 require $projectRoot . '/models/OrderRepository.php';
+require $projectRoot . '/models/CategoryRepository.php';
+require $projectRoot . '/models/PosRepository.php';
+require $projectRoot . '/controllers/CategoryController.php';
+require $projectRoot . '/controllers/PosController.php';
 
 $isHttps = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
 ini_set('session.use_strict_mode', '1');
@@ -125,12 +133,11 @@ function adminProductImages(): array
     ];
 }
 
-function adminProductInput(): array
+function adminProductInput(CategoryRepository $categories): array
 {
-    $categories = ['pria', 'anak', 'wanita'];
     $statuses = ['active', 'inactive'];
     $name = adminRequiredText('name', 'Nama produk', 120);
-    $category = adminPostString('category');
+    $categoryId = adminUnsignedInteger('category_id', 'Kategori', 999999999999);
     $variant = adminRequiredText('variant', 'Varian', 160);
     $priceMin = adminUnsignedInteger('price_min', 'Harga minimum', 999999999999);
     $priceMax = adminUnsignedInteger('price_max', 'Harga maksimum', 999999999999);
@@ -138,7 +145,7 @@ function adminProductInput(): array
     $imagePath = adminPostString('image_path');
     $status = adminPostString('status');
 
-    if (!in_array($category, $categories, true)) {
+    if ($categories->findById($categoryId) === null) {
         throw new InvalidArgumentException('Kategori produk tidak valid.');
     }
 
@@ -159,7 +166,7 @@ function adminProductInput(): array
 
     return [
         'name' => $name,
-        'category' => $category,
+        'category_id' => $categoryId,
         'variant' => $variant,
         'price_min' => $priceMin,
         'price_max' => $priceMax,
@@ -233,6 +240,19 @@ function adminFlash(string $type, string $message): void
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
 }
 
+function adminActionTab(string $action): string
+{
+    if (str_contains($action, 'order')) {
+        return 'orders';
+    }
+
+    if (str_contains($action, 'category')) {
+        return 'categories';
+    }
+
+    return str_contains($action, 'sale') ? 'pos' : 'products';
+}
+
 $csrfToken = adminCsrfToken();
 $isAuthenticated = ($_SESSION['admin_authenticated'] ?? false) === true;
 
@@ -299,10 +319,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo = adminDatabaseConnection($projectRoot);
         $products = new ProductRepository($pdo);
         $orders = new OrderRepository($pdo);
+        $categories = new CategoryRepository($pdo);
+        $categoryController = new CategoryController($categories);
+        $pos = new PosRepository($pdo);
+        $posController = new PosController($pos);
 
         switch ($action) {
             case 'create_product':
-                $products->create(adminProductInput());
+                $products->create(adminProductInput($categories));
                 adminFlash('success', 'Produk berhasil ditambahkan.');
                 adminRedirect('products');
 
@@ -311,7 +335,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($products->findById($id) === null) {
                     throw new InvalidArgumentException('Produk tidak ditemukan.');
                 }
-                $products->update($id, adminProductInput());
+                $products->update($id, adminProductInput($categories));
                 adminFlash('success', 'Produk berhasil diperbarui.');
                 adminRedirect('products');
 
@@ -347,17 +371,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 adminFlash('success', 'Pesanan berhasil dihapus.');
                 adminRedirect('orders');
 
+            case 'create_category':
+                $categoryController->create($_POST);
+                adminFlash('success', 'Kategori berhasil ditambahkan.');
+                adminRedirect('categories');
+
+            case 'update_category':
+                $categoryController->update(adminRecordId(), $_POST);
+                adminFlash('success', 'Kategori berhasil diperbarui.');
+                adminRedirect('categories');
+
+            case 'delete_category':
+                $categoryController->delete(adminRecordId());
+                adminFlash('success', 'Kategori berhasil dihapus.');
+                adminRedirect('categories');
+
+            case 'create_sale':
+                $sale = $posController->createSale($_POST['items'] ?? null);
+                adminFlash(
+                    'success',
+                    sprintf(
+                        'Transaksi #%d berhasil disimpan. Total Rp%s.',
+                        $sale['id'],
+                        number_format($sale['total_amount'], 0, ',', '.')
+                    )
+                );
+                adminRedirect('pos');
+
             default:
                 throw new InvalidArgumentException('Aksi tidak dikenal.');
         }
     } catch (InvalidArgumentException $exception) {
         adminFlash('error', $exception->getMessage());
-        adminRedirect(str_contains($action, 'order') ? 'orders' : 'products');
+        adminRedirect(adminActionTab($action));
+    } catch (DomainException $exception) {
+        adminFlash('error', $exception->getMessage());
+        adminRedirect(adminActionTab($action));
     } catch (PDOException | RuntimeException $exception) {
         error_log('Mais Batik admin database operation failed ('
             . $exception::class . ', code ' . $exception->getCode() . ').');
         adminFlash('error', 'Operasi gagal karena database tidak tersedia. Periksa konfigurasi dan skema database.');
-        adminRedirect(str_contains($action, 'order') ? 'orders' : 'products');
+        adminRedirect(adminActionTab($action));
     }
 }
 
@@ -366,14 +420,22 @@ unset($_SESSION['flash']);
 $databaseError = null;
 $productRows = [];
 $orderRows = [];
+$categoryRows = [];
+$saleRows = [];
+$posProducts = [];
 
 if ($isAuthenticated) {
     try {
         $pdo = adminDatabaseConnection($projectRoot);
         $products = new ProductRepository($pdo);
         $orders = new OrderRepository($pdo);
+        $categories = new CategoryRepository($pdo);
+        $pos = new PosRepository($pdo);
         $productRows = $products->findAll();
         $orderRows = $orders->findAll();
+        $categoryRows = $categories->findAll();
+        $saleRows = $pos->findRecentSales();
+        $posProducts = $pos->findActiveProducts();
     } catch (PDOException | RuntimeException $exception) {
         error_log('Mais Batik admin database connection failed ('
             . $exception::class . ', code ' . $exception->getCode() . ').');
@@ -382,8 +444,15 @@ if ($isAuthenticated) {
     }
 }
 
-$activeTab = ($_GET['tab'] ?? 'products') === 'orders' ? 'orders' : 'products';
-$categoryLabels = ['pria' => 'Batik pria', 'anak' => 'Batik anak', 'wanita' => 'Batik wanita'];
+$requestedTab = $_GET['tab'] ?? 'products';
+$activeTab = is_string($requestedTab)
+    && in_array($requestedTab, ['products', 'orders', 'categories', 'pos'], true)
+    ? $requestedTab
+    : 'products';
+$categoryLabels = [];
+foreach ($categoryRows as $category) {
+    $categoryLabels[$category['slug']] = $category['name'];
+}
 $statusLabels = [
     'baru' => 'Baru',
     'diproses' => 'Diproses',
@@ -460,6 +529,8 @@ $statusLabels = [
           <nav class="admin-tabs" aria-label="Bagian pengelolaan">
             <a class="<?= $activeTab === 'products' ? 'active' : '' ?>" href="?tab=products">Produk <span><?= count($productRows) ?></span></a>
             <a class="<?= $activeTab === 'orders' ? 'active' : '' ?>" href="?tab=orders">Pesanan <span><?= count($orderRows) ?></span></a>
+            <a class="<?= $activeTab === 'categories' ? 'active' : '' ?>" href="?tab=categories">Kategori <span><?= count($categoryRows) ?></span></a>
+            <a class="<?= $activeTab === 'pos' ? 'active' : '' ?>" href="?tab=pos">POS</a>
           </nav>
 
           <?php if ($activeTab === 'products'): ?>
@@ -477,11 +548,11 @@ $statusLabels = [
                     <input name="name" required maxlength="120" minlength="2" autocomplete="off">
                   </label>
                   <label>Kategori
-                    <select name="category" required>
+                    <select name="category_id" required>
                       <option value="">Pilih kategori</option>
-                      <option value="pria">Batik pria</option>
-                      <option value="anak">Batik anak</option>
-                      <option value="wanita">Batik wanita</option>
+                      <?php foreach ($categoryRows as $category): ?>
+                        <option value="<?= adminEscape($category['id']) ?>"><?= adminEscape($category['name']) ?></option>
+                      <?php endforeach; ?>
                     </select>
                   </label>
                   <label>Varian / ukuran
@@ -521,7 +592,7 @@ $statusLabels = [
                   <article class="record-card">
                     <img class="record-image" src="../<?= adminEscape($product['image_path']) ?>" alt="" width="72" height="72">
                     <div class="record-summary">
-                      <span class="record-meta"><?= adminEscape($categoryLabels[$product['category']] ?? $product['category']) ?> · <?= adminEscape($product['variant']) ?></span>
+                      <span class="record-meta"><?= adminEscape($product['category_name']) ?> · <?= adminEscape($product['variant']) ?></span>
                       <h3><?= adminEscape($product['name']) ?></h3>
                       <p>Rp<?= number_format((int) $product['price_min'], 0, ',', '.') ?>–Rp<?= number_format((int) $product['price_max'], 0, ',', '.') ?> · Stok <?= adminEscape($product['stock']) ?> · <?= $product['status'] === 'active' ? 'Aktif' : 'Nonaktif' ?></p>
                     </div>
@@ -533,7 +604,7 @@ $statusLabels = [
                           <input type="hidden" name="action" value="update_product">
                           <input type="hidden" name="id" value="<?= adminEscape($product['id']) ?>">
                           <label>Nama produk<input name="name" required maxlength="120" minlength="2" value="<?= adminEscape($product['name']) ?>"></label>
-                          <label>Kategori<select name="category" required><?php foreach ($categoryLabels as $value => $label): ?><option value="<?= adminEscape($value) ?>" <?= $product['category'] === $value ? 'selected' : '' ?>><?= adminEscape($label) ?></option><?php endforeach; ?></select></label>
+                          <label>Kategori<select name="category_id" required><?php foreach ($categoryRows as $category): ?><option value="<?= adminEscape($category['id']) ?>" <?= (int) $product['category_id'] === (int) $category['id'] ? 'selected' : '' ?>><?= adminEscape($category['name']) ?></option><?php endforeach; ?></select></label>
                           <label>Varian / ukuran<input name="variant" required maxlength="160" value="<?= adminEscape($product['variant']) ?>"></label>
                           <label>Gambar produk<select name="image_path" required><?php foreach (adminProductImages() as $path => $label): ?><option value="<?= adminEscape($path) ?>" <?= $product['image_path'] === $path ? 'selected' : '' ?>><?= adminEscape($label) ?></option><?php endforeach; ?></select></label>
                           <label>Harga minimum (Rp)<input name="price_min" type="number" min="1" max="999999999999" step="1" required value="<?= adminEscape($product['price_min']) ?>"></label>
@@ -549,7 +620,7 @@ $statusLabels = [
                 <?php endforeach; ?>
               </div>
             </section>
-          <?php else: ?>
+          <?php elseif ($activeTab === 'orders'): ?>
             <section class="management-section">
               <div class="section-title">
                 <div><p class="eyebrow">Transaksi</p><h2>Pesanan</h2></div>
@@ -616,6 +687,114 @@ $statusLabels = [
                         </form>
                       </details>
                       <button class="button button-danger delete-request" type="button" data-record-type="pesanan" data-record-name="<?= adminEscape($order['product_name']) ?>" data-record-id="<?= adminEscape($order['id']) ?>">Hapus</button>
+                    </div>
+                  </article>
+                <?php endforeach; ?>
+              </div>
+            </section>
+          <?php elseif ($activeTab === 'categories'): ?>
+            <section class="management-section">
+              <div class="section-title">
+                <div><p class="eyebrow">Pengaturan katalog</p><h2>Kategori</h2></div>
+                <span><?= count($categoryRows) ?> kategori</span>
+              </div>
+              <details class="editor-card" open>
+                <summary>Tambah kategori</summary>
+                <form method="post" class="form-grid" data-validate>
+                  <input type="hidden" name="csrf_token" value="<?= adminEscape($csrfToken) ?>">
+                  <input type="hidden" name="action" value="create_category">
+                  <label>Nama kategori<input name="name" required maxlength="120"></label>
+                  <label>Slug URL<input name="slug" required maxlength="60" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="contoh: batik-pria"></label>
+                  <div class="form-actions"><button class="button button-primary" type="submit">Simpan kategori</button></div>
+                </form>
+              </details>
+
+              <div class="record-list">
+                <?php if ($categoryRows === []): ?>
+                  <p class="empty-state">Belum ada kategori.</p>
+                <?php endif; ?>
+                <?php foreach ($categoryRows as $category): ?>
+                  <article class="record-card category-record">
+                    <div class="record-summary">
+                      <span class="record-meta">Slug: <?= adminEscape($category['slug']) ?></span>
+                      <h3><?= adminEscape($category['name']) ?></h3>
+                    </div>
+                    <div class="record-controls">
+                      <details class="inline-editor">
+                        <summary>Edit</summary>
+                        <form method="post" class="form-grid compact-form" data-validate>
+                          <input type="hidden" name="csrf_token" value="<?= adminEscape($csrfToken) ?>">
+                          <input type="hidden" name="action" value="update_category">
+                          <input type="hidden" name="id" value="<?= adminEscape($category['id']) ?>">
+                          <label>Nama kategori<input name="name" required maxlength="120" value="<?= adminEscape($category['name']) ?>"></label>
+                          <label>Slug URL<input name="slug" required maxlength="60" pattern="[a-z0-9]+(-[a-z0-9]+)*" value="<?= adminEscape($category['slug']) ?>"></label>
+                          <div class="form-actions"><button class="button button-primary" type="submit">Simpan perubahan</button></div>
+                        </form>
+                      </details>
+                      <button class="button button-danger delete-request" type="button" data-record-type="kategori" data-record-name="<?= adminEscape($category['name']) ?>" data-record-id="<?= adminEscape($category['id']) ?>">Hapus</button>
+                    </div>
+                  </article>
+                <?php endforeach; ?>
+              </div>
+            </section>
+          <?php else: ?>
+            <section class="management-section">
+              <div class="section-title">
+                <div><p class="eyebrow">Kasir</p><h2>Point of Sale</h2></div>
+                <span><?= count($saleRows) ?> transaksi terbaru</span>
+              </div>
+
+              <details class="editor-card" open>
+                <summary>Buat transaksi penjualan</summary>
+                <?php if ($posProducts === []): ?>
+                  <p class="empty-state">Tidak ada produk aktif dengan stok tersedia untuk dijual.</p>
+                <?php else: ?>
+                  <form method="post" class="pos-form" data-pos-form>
+                    <input type="hidden" name="csrf_token" value="<?= adminEscape($csrfToken) ?>">
+                    <input type="hidden" name="action" value="create_sale">
+                    <div class="pos-items" data-pos-items>
+                      <div class="pos-item-row" data-pos-row>
+                        <label>Produk
+                          <select name="items[0][product_id]" required data-pos-product-select>
+                            <option value="">Pilih produk</option>
+                            <?php foreach ($posProducts as $product): ?>
+                              <option value="<?= adminEscape($product['id']) ?>" data-stock="<?= adminEscape($product['stock']) ?>" data-price="<?= adminEscape($product['price_min']) ?>">
+                                <?= adminEscape($product['name']) ?> · stok <?= adminEscape($product['stock']) ?> · Rp<?= number_format((int) $product['price_min'], 0, ',', '.') ?>
+                              </option>
+                            <?php endforeach; ?>
+                          </select>
+                        </label>
+                        <label>Jumlah
+                          <input name="items[0][quantity]" type="number" min="1" max="1000000" step="1" value="1" required data-pos-quantity>
+                        </label>
+                        <span class="pos-line-total" data-pos-line-total>Harga memakai harga katalog</span>
+                        <button class="button button-quiet" type="button" data-remove-pos-item disabled>Hapus baris</button>
+                      </div>
+                    </div>
+                    <div class="pos-form-actions">
+                      <button class="button button-quiet" type="button" data-add-pos-item>Tambah produk</button>
+                      <button class="button button-primary" type="submit">Simpan transaksi</button>
+                    </div>
+                    <p class="pos-total" data-pos-total>Total: Rp0</p>
+                    <p class="form-help">Harga transaksi diambil dari harga minimum di katalog. Stok diperiksa dan dikurangi saat transaksi disimpan.</p>
+                  </form>
+                <?php endif; ?>
+              </details>
+
+              <div class="section-title">
+                <div><p class="eyebrow">Riwayat</p><h2>Transaksi POS terbaru</h2></div>
+              </div>
+              <div class="record-list">
+                <?php if ($saleRows === []): ?>
+                  <p class="empty-state">Belum ada transaksi POS.</p>
+                <?php endif; ?>
+                <?php foreach ($saleRows as $sale): ?>
+                  <article class="record-card order-record">
+                    <div class="order-mark" aria-hidden="true">#<?= adminEscape($sale['id']) ?></div>
+                    <div class="record-summary">
+                      <span class="record-meta"><?= adminEscape($sale['created_at']) ?> · <?= adminEscape($sale['item_count']) ?> baris produk</span>
+                      <h3>Transaksi POS #<?= adminEscape($sale['id']) ?></h3>
+                      <p>Total penjualan Rp<?= number_format((int) $sale['total_amount'], 0, ',', '.') ?></p>
                     </div>
                   </article>
                 <?php endforeach; ?>

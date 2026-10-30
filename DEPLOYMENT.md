@@ -34,9 +34,10 @@ atau menonaktifkan akses eksternal/database setelah periode tertentu.
    Skema membuat database `mais_batik`; jika provider tidak memberi hak untuk
    membuat database, hapus perintah `CREATE DATABASE` dan `USE` dari salinan SQL
    yang akan diimpor, lalu pilih database yang sudah dibuat. Untuk database
-   proyek yang sudah ada, jalankan migrasi
-   `database/migrations/20261030_replace_legacy_product_images.sql` satu kali
-   agar path gambar lama diperbarui ke foto produk baru.
+   proyek yang sudah ada, jalankan migrasi berikut satu kali secara berurutan:
+   `database/migrations/20261030_replace_legacy_product_images.sql`, lalu
+   `database/migrations/20261030_categories_and_pos.sql`. Migrasi kedua
+   mengubah kategori ENUM lama ke tabel kategori dan membuat tabel transaksi POS.
 5. Buat password admin yang kuat dan hash-nya pada mesin yang memiliki PHP:
 
    ```bash

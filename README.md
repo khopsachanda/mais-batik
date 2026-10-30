@@ -14,6 +14,10 @@ publik yang responsif dengan panel pengelolaan berbasis PHP dan MySQL.
 - **Mode terang dan gelap** yang mengikuti preferensi sistem dan menyimpan
   pilihan tema di browser.
 - **Panel admin** untuk autentikasi serta pengelolaan data produk dan pesanan.
+- **CRUD kategori terpisah** dengan slug unik; kategori yang masih dipakai
+  produk tidak dapat dihapus.
+- **POS multi-produk** yang mencatat transaksi dan item penjualan, mengambil
+  harga dari database, serta mengurangi stok secara transaksional.
 - **Formulir dengan validasi client-side dan server-side** untuk membantu
   memastikan data yang dikirim lengkap dan sesuai format.
 - **Dialog konfirmasi** sebelum aksi penghapusan data.
@@ -21,8 +25,6 @@ publik yang responsif dengan panel pengelolaan berbasis PHP dan MySQL.
   penyimpanan data, dan aset antarmuka.
 - **Keamanan dasar aplikasi**, termasuk penggunaan PDO, konfigurasi rahasia
   melalui environment, perlindungan CSRF, dan escaping keluaran.
-
-> POS masih berupa placeholder dan belum terhubung ke proses transaksi.
 
 ## Teknologi dan Prasyarat
 
@@ -87,6 +89,16 @@ satu kali setelah skema tersedia:
 Get-Content -Raw database\migrations\20261030_replace_legacy_product_images.sql | mysql -u nama_user_database -p
 ```
 
+Untuk database lama yang masih memakai kategori ENUM, jalankan migrasi kategori
+dan POS setelah migrasi gambar:
+
+```powershell
+Get-Content -Raw database\migrations\20261030_categories_and_pos.sql | mysql -u nama_user_database -p
+```
+
+Database baru yang dibuat dari `database/schema.sql` sudah memiliki tabel
+kategori dan POS, sehingga kedua migrasi upgrade tersebut tidak diperlukan.
+
 ### 4. Siapkan akun admin
 
 Buat hash untuk kata sandi admin menggunakan PHP:
@@ -129,10 +141,11 @@ Untuk panduan deployment PHP/MySQL, lihat [DEPLOYMENT.md](./DEPLOYMENT.md).
 ├── config/                  # Koneksi dan konfigurasi aplikasi
 │   ├── connection.php
 │   └── database.php.example
+├── controllers/             # Validasi dan alur kategori serta POS
 ├── database/
-│   └── schema.sql           # Skema MySQL produk dan pesanan
-├── controllers/             # Ruang untuk controller terpisah
-├── models/                  # Akses data/repository produk dan pesanan
+│   ├── schema.sql           # Skema MySQL katalog, pesanan, kategori, dan POS
+│   └── migrations/          # Migrasi upgrade untuk gambar, kategori, dan POS
+├── models/                  # Repository produk, pesanan, kategori, dan POS
 ├── public/                  # Document root; halaman dan aset yang dapat diakses
 │   ├── admin/index.php      # Login admin dan panel CRUD
 │   ├── assets/
@@ -149,12 +162,16 @@ Untuk panduan deployment PHP/MySQL, lihat [DEPLOYMENT.md](./DEPLOYMENT.md).
 └── README.md
 ```
 
-Permintaan halaman masuk melalui berkas PHP di `public/`. Koneksi di
+Permintaan admin masuk melalui `public/admin/index.php`, yang menerapkan
+autentikasi dan CSRF lalu mengarahkan aksi kategori/POS ke controller terkait.
+Controller memvalidasi input dan memanggil repository di `models/`; operasi POS
+mengunci produk, memeriksa serta mengurangi stok, dan menyimpan transaksi beserta
+itemnya dalam satu transaksi database. Koneksi di
 `config/connection.php` menggunakan nilai dari konfigurasi database,
 repository di `models/` menangani akses data, dan `database/schema.sql`
 menyediakan struktur penyimpanan. HTML, CSS, JavaScript, serta gambar yang
 disajikan ke browser berada di `public/`. Folder `controllers/`, `routes/`,
-dan `views/` disediakan untuk pengembangan pemisahan MVC lebih lanjut.
+dan `views/` dapat dikembangkan lebih lanjut untuk pemisahan MVC yang lebih luas.
 
 Atur document root web server ke `public/`. Simpan konfigurasi, model, dan
 berkas internal lain di luar document root. Database harus disiapkan sebelum
