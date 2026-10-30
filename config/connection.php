@@ -17,13 +17,18 @@ $dsn = sprintf(
     $databaseConfig['charset']
 );
 
-return new PDO(
-    $dsn,
-    $databaseConfig['username'],
-    $databaseConfig['password'],
-    [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ]
-);
+try {
+    return new PDO(
+        $dsn,
+        $databaseConfig['username'],
+        $databaseConfig['password'],
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]
+    );
+} catch (PDOException $exception) {
+    error_log('Mais Batik database connection failed (SQLSTATE ' . $exception->getCode() . ').');
+    throw new RuntimeException('Database connection failed.', 0, $exception);
+}

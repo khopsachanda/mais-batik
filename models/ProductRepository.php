@@ -14,11 +14,12 @@ final class ProductRepository
 
     public function findAll(): array
     {
-        $statement = $this->pdo->query(
+        $statement = $this->pdo->prepare(
             'SELECT id, name, category, variant, price_min, price_max, stock, image_path, status, created_at
              FROM products
              ORDER BY updated_at DESC, id DESC'
         );
+        $statement->execute();
 
         return $statement->fetchAll();
     }

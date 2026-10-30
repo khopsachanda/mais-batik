@@ -354,7 +354,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         adminFlash('error', $exception->getMessage());
         adminRedirect(str_contains($action, 'order') ? 'orders' : 'products');
     } catch (PDOException | RuntimeException $exception) {
-        error_log('Mais Batik admin database error: ' . $exception->getMessage());
+        error_log('Mais Batik admin database operation failed ('
+            . $exception::class . ', code ' . $exception->getCode() . ').');
         adminFlash('error', 'Operasi gagal karena database tidak tersedia. Periksa konfigurasi dan skema database.');
         adminRedirect(str_contains($action, 'order') ? 'orders' : 'products');
     }
@@ -374,7 +375,8 @@ if ($isAuthenticated) {
         $productRows = $products->findAll();
         $orderRows = $orders->findAll();
     } catch (PDOException | RuntimeException $exception) {
-        error_log('Mais Batik admin database connection error: ' . $exception->getMessage());
+        error_log('Mais Batik admin database connection failed ('
+            . $exception::class . ', code ' . $exception->getCode() . ').');
         http_response_code(503);
         $databaseError = 'Database belum siap. Atur config/database.php lalu impor database/schema.sql.';
     }

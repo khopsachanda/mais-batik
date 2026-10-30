@@ -14,12 +14,13 @@ final class OrderRepository
 
     public function findAll(): array
     {
-        $statement = $this->pdo->query(
+        $statement = $this->pdo->prepare(
             'SELECT id, product_id, product_name, customer_name, customer_email, customer_phone,
                     variant, quantity, unit_price, status, notes, created_at
              FROM orders
              ORDER BY created_at DESC, id DESC'
         );
+        $statement->execute();
 
         return $statement->fetchAll();
     }

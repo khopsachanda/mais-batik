@@ -27,7 +27,8 @@ try {
         static fn (array $product): bool => $product['status'] === 'active'
     ));
 } catch (PDOException | RuntimeException $exception) {
-    error_log('Mais Batik catalog database error: ' . $exception->getMessage());
+    error_log('Mais Batik catalog database request failed ('
+        . $exception::class . ', code ' . $exception->getCode() . ').');
     http_response_code(503);
     $catalogError = 'Katalog belum dapat dimuat. Pastikan database dan konfigurasi aplikasi sudah disiapkan.';
 }

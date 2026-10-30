@@ -80,6 +80,13 @@ Masukkan kata sandi MySQL saat diminta. Jika akun database tidak diizinkan
 membuat database, buat `mais_batik` terlebih dahulu di MySQL, lalu hapus
 perintah `CREATE DATABASE` dan `USE` dari salinan skema yang akan diimpor.
 
+Jika memperbarui database proyek yang sudah ada, jalankan migrasi gambar produk
+satu kali setelah skema tersedia:
+
+```powershell
+Get-Content -Raw database\migrations\20261030_replace_legacy_product_images.sql | mysql -u nama_user_database -p
+```
+
 ### 4. Siapkan akun admin
 
 Buat hash untuk kata sandi admin menggunakan PHP:

@@ -33,7 +33,10 @@ atau menonaktifkan akses eksternal/database setelah periode tertentu.
 4. Impor `database/schema.sql` lewat phpMyAdmin atau alat database provider.
    Skema membuat database `mais_batik`; jika provider tidak memberi hak untuk
    membuat database, hapus perintah `CREATE DATABASE` dan `USE` dari salinan SQL
-   yang akan diimpor, lalu pilih database yang sudah dibuat.
+   yang akan diimpor, lalu pilih database yang sudah dibuat. Untuk database
+   proyek yang sudah ada, jalankan migrasi
+   `database/migrations/20261030_replace_legacy_product_images.sql` satu kali
+   agar path gambar lama diperbarui ke foto produk baru.
 5. Buat password admin yang kuat dan hash-nya pada mesin yang memiliki PHP:
 
    ```bash
